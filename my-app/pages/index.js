@@ -4,7 +4,12 @@ import { Inter } from '@next/font/google'
 import styles from '@/styles/Home.module.css'
 import { useEffect, useState, useRef } from 'react'
 import Web3Modal from 'web3modal'
-import { BigNumber, Contract, utils } from 'ethers'
+import { BigNumber, Contract, utils, providers } from 'ethers'
+import {
+  TOKEN_CONTRACT_ABI, TOKEN_CONTRACT_ADDRESS, 
+  NFT_CONTRACT_ABI, 
+  NFT_CONTRACT_ADRRESS
+} from "../constants";
 
 
 
@@ -34,7 +39,7 @@ export default function Home() {
     }
 
     if(needSigner) {
-      const signer=web3Provider.getSigner();
+      const signer = web3Provider.getSigner();
       return signer;
     }
     return web3Provider;
@@ -54,6 +59,7 @@ export default function Home() {
     try {
       const provider = await getProviderOrSigner();
       const nftContract = new Contract(NFT_CONTRACT_ADRRESS, NFT_CONTRACT_ABI, provider);
+      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ABI, provider);
 
       const signer = await getProviderOrSigner(true);
       const address = await signer.getAddress();
@@ -63,7 +69,7 @@ export default function Home() {
         setTokensToBeClaimed(zero)
       } else {
         var amount = 0;
-        for (var i =o; i<balance; i++) {
+        for (var i =0; i<balance; i++) {
           const tokenId = await nftContract.tokenOfOwnerByIndex(address, i)
           const claimed = await tokenContract.tokenIdsClaimed(tokenId)
           if(!claimed) {
@@ -83,8 +89,8 @@ export default function Home() {
       const provider = await getProviderOrSigner();
       const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ABI, provider);
 
-      const signer = getProviderOrSigner(true);
-      const address = signer.getAddress();
+      const signer = await getProviderOrSigner(true);
+      const address = await signer.getAddress();
       const balance = await tokenContract.balanceOf(address);
       setUserCryptoDevsMinted(balance);
     } catch(e) {
@@ -130,7 +136,7 @@ export default function Home() {
 
   const claimCryptoDevTokens = async()=>{
     try {
-      const signer = getProviderOrSigner(true);
+      const signer = await getProviderOrSigner(true);
       const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ABI, signer);
 
       const tx = await tokenContract.claim();
@@ -156,7 +162,7 @@ export default function Home() {
       );
     }
 
-    if(tokensToBeClaimed) {
+    if(tokensToBeClaimed > 0) {
       return (
         <div>
           <div className={styles.description}>
@@ -166,26 +172,21 @@ export default function Home() {
             Claim Tokens
           </button>
         </div>
-      )
-
-    }
-    try{
-
-      return (
-        <div style={{display:"flex-col"}}>
-          <div>
-            <input type="number" placeholder="Amount of Tokens" onChange={(e) => setTokenAmount(BigNumber.from(e.target.value))}/>
-            <button className={styles.button} disabled={!(tokemAmount>0)} onClick={() => mintCryptoDevToken(tokenAmount)}>
-              Mint Tokens
-            </button>
-          </div>
-        </div>
-
       );
-
-    }catch(e) {
-      console.error(e)
     }
+    
+
+    return (
+      <div style={{display:"flex-col"}}>
+        <div>
+          <input type="number" placeholder="Amount of Tokens" onChange={(e) => setTokenAmount(BigNumber.from(e.target.value))}/>
+          <button className={styles.button} disabled={!(tokenAmount>0)} onClick={() => mintCryptoDevToken(tokenAmount)}>
+            Mint Tokens
+          </button>
+        </div>
+      </div>
+
+    );
   };
 
   useEffect(() => {
@@ -195,11 +196,14 @@ export default function Home() {
         providerOptions: {},
         disableInjectedProvider: false,
       });
-      connectWallet()
+      connectWallet();
+      getBalanceOfCryptoDevTokens();
+      getTotalTokensMinted();
+      getTokensToBeClaimed();
 
     }
 
-  }, [])
+  }, [walletConnected])
   return (
     <div>
       <Head>
@@ -229,8 +233,13 @@ export default function Home() {
             </button>
           )}
         </div>
-
+        <div>
+          <img className={styles.image} src="./0.svg"/>
+        </div>
       </div>
+      <footer className={styles.footer}>
+        Made with &#10084; by CryptoGuys
+      </footer>
     </div>
-  )
+  );
 }
