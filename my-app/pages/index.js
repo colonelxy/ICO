@@ -16,6 +16,7 @@ export default function Home() {
   const [tokenMinted, setTokenMinted] = useState(zero);
   const [userCryptoDevsMinted, setUserCryptoDevsMinted] = useState(zero);
   const [tokenAmount, setTokenAmount] = useState(zero);
+  const [loading, setLoading] = useState(false);
 
   const getProviderOrSigner = async(needSigner = false) => {
 
@@ -46,12 +47,39 @@ export default function Home() {
     }
   };
 
+  const getBalanceOfCryptoDevTokens = async()=>{
+    try{
+      const provider = await getProviderOrSigner();
+      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ABI, provider);
+
+      const signer = getProviderOrSigner(true);
+      const address = signer.getAddress();
+      const balance = await tokenContract.balanceOf(address);
+
+
+
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
   const mintCryptoDevToken = async(amount) => {
     try{
       const signer = await getProviderOrSigner(true);
       const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ABI, signer);
 
       const value = 0.001*amount;
+
+      const tx = await tokenContract.mint(amount, {
+        value: utils.parseEther(value.toString()),
+      });
+
+      setLoading(true);
+      await tx.wait();
+      setLoading(false);
+      window.alert("You've successfully minted Crypto Dev Tokens");
+      await getBalanceOfCryptoDevTokens();
+      await getTotalTokensMinted();
 
     } catch(e) {
       console.error(e);
