@@ -4,7 +4,7 @@ import { Inter } from '@next/font/google'
 import styles from '@/styles/Home.module.css'
 import { useEffect, useState, useRef } from 'react'
 import Web3Modal from 'web3modal'
-import { BigNumber } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 
 
 
@@ -14,6 +14,7 @@ export default function Home() {
   const [walletConnected, setWalletConnected] = useState(false);
   const web3ModalRef = useRef();
   const [tokenMinted, setTokenMinted] = useState(zero);
+  const [userCryptoDevsMinted, setUserCryptoDevsMinted] = useState(zero);
 
   const getProviderOrSigner = async(needSigner = false) => {
 
@@ -72,7 +73,10 @@ export default function Home() {
           {walletConnected ? (
             <div>
               <div className={styles.description}>
-                Overal {}/10000 have been minted
+                You have minted {utils.formatEther(userCryptoDevsMinted)} Crypto Dev tokens
+              </div>
+              <div className={styles.description}>
+                Overal {utils.formatEther(tokenMinted)}/10000 have been minted
 
               </div>
             </div>
