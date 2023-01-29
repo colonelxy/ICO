@@ -121,6 +121,26 @@ export default function Home() {
       window.alert("You've successfully minted Crypto Dev Tokens");
       await getBalanceOfCryptoDevTokens();
       await getTotalTokensMinted();
+      await getTokensToBeClaimed();
+
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const claimCryptoDevTokens = async()=>{
+    try {
+      const signer = getProviderOrSigner(true);
+      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ABI, signer);
+
+      const tx = await tokenContract.claim();
+      setLoading(true);
+      await tx.wait();
+      setLoading(false);
+      window.alert("Successfully claimed Crypto Dev tokens");
+      await getBalanceOfCryptoDevTokens();
+      await getTotalTokensMinted();
+      await getTokensToBeClaimed();
 
     } catch(e) {
       console.error(e);
@@ -137,6 +157,16 @@ export default function Home() {
     }
 
     if(tokensToBeClaimed) {
+      return (
+        <div>
+          <div className={styles.description}>
+            {tokensToBeClaimed * 10} Tokens to be claimed!
+          </div>
+          <button className={styles.button} onClick={claimCryptoDevTokens}>
+            Claim Tokens
+          </button>
+        </div>
+      )
 
     }
     try{
