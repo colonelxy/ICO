@@ -17,6 +17,9 @@ export default function Home() {
   const [userCryptoDevsMinted, setUserCryptoDevsMinted] = useState(zero);
   const [tokenAmount, setTokenAmount] = useState(zero);
   const [loading, setLoading] = useState(false);
+  const [tokensToBeClaimed, setTokensToBeClaimed] = useState(zero);
+
+
 
   const getProviderOrSigner = async(needSigner = false) => {
 
@@ -47,6 +50,34 @@ export default function Home() {
     }
   };
 
+  const getTokensToBeClaimed = async ()=> {
+    try {
+      const provider = await getProviderOrSigner();
+      const nftContract = new Contract(NFT_CONTRACT_ADRRESS, NFT_CONTRACT_ABI, provider);
+
+      const signer = await getProviderOrSigner(true);
+      const address = await signer.getAddress();
+      const balance = await nftContract.balanceOf(address);
+
+      if(balance===zero) {
+        setTokensToBeClaimed(zero)
+      } else {
+        var amount = 0;
+        for (var i =o; i<balance; i++) {
+          const tokenId = await nftContract.tokenOfOwnerByIndex(address, i)
+          const claimed = await tokenContract.tokenIdsClaimed(tokenId)
+          if(!claimed) {
+            amount++;
+          }
+        }
+        setTokensToBeClaimed(BigNumber.from(amount));
+      }
+
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
   const getBalanceOfCryptoDevTokens = async()=>{
     try{
       const provider = await getProviderOrSigner();
@@ -55,13 +86,23 @@ export default function Home() {
       const signer = getProviderOrSigner(true);
       const address = signer.getAddress();
       const balance = await tokenContract.balanceOf(address);
-
-
-
+      setUserCryptoDevsMinted(balance);
     } catch(e) {
       console.error(e);
     }
-  }
+  };
+
+  const getTotalTokensMinted = async() => {
+    try{
+      const provider = await getProviderOrSigner();
+      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_CONTRACT_ABI, provider)
+      const _tokenMinted = await tokenContract.totalSupply();
+      setTokenMinted(_tokenMinted);
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
 
   const mintCryptoDevToken = async(amount) => {
     try{
@@ -87,6 +128,17 @@ export default function Home() {
   };
 
   const renderButton=()=>{
+    if(loading) {
+      return (
+      <div>
+        <button className={styles.button}>Loading...</button>
+      </div>
+      );
+    }
+
+    if(tokensToBeClaimed) {
+
+    }
     try{
 
       return (
@@ -143,7 +195,7 @@ export default function Home() {
             </div>
           ) : (
             <button onClick={connectWallet} className={styles.button}>
-              Connect your wallet
+              Connect Wallet
             </button>
           )}
         </div>
